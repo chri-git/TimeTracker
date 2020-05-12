@@ -28,8 +28,6 @@ public class MainActivity extends Activity {
      */
     private LocalDate mCurrentMonth;
 
-    // private GestureDetectorCompat mGestureDetector;
-
     private TimeRecordListAdapter mTimeRecordListAdapter;
 
     private final TaskRunner mTaskRunner = new TaskRunner();
@@ -37,17 +35,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // mGestureDetector = new GestureDetectorCompat(this, new SwipeGestureListener());
         // load the current (real-life) month
         mCurrentMonth = LocalDate.now();
         loadView();
     }
-
-/*    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        this.mGestureDetector.onTouchEvent(event);
-        return super.onTouchEvent(event);
-    }*/
 
     // todo lifecycle considerations. if we get resumed, may want to reload the last selected month
 
@@ -92,7 +83,6 @@ public class MainActivity extends Activity {
     private void showContent() {
         setContentView(R.layout.activity_main);
         final ListView listView = findViewById(R.id.list_times);
-        // listView.setOnTouchListener((view, motionEvent) -> mGestureDetector.onTouchEvent(motionEvent));
         listView.setAdapter(mTimeRecordListAdapter);
         updateMonthlyBalance();
 
@@ -113,45 +103,4 @@ public class MainActivity extends Activity {
         mCurrentMonth = mCurrentMonth.minusMonths(1);
         loadView();
     }
-
-
-    
-/*    class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
-
-      // Detects swipe to the right and left and will switch the month accordingly
-     
-
-        private static final int SWIPE_THRESHOLD = 100;
-        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
-
-        @Override
-        public boolean onDown(MotionEvent event) {
-            Log.d("Gestures", "onDown: " + event.toString());
-            return true;
-        }
-
-        @Override
-        public boolean onFling(MotionEvent event1, MotionEvent event2,
-                               float velocityX, float velocityY) {
-            if (event1 != null && event2 != null) {
-                float diffY = event2.getY() - event1.getY();
-                float diffX = event2.getX() - event1.getX();
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0) {
-                            // swipe right
-                            Log.d("Gestures", "swipe right: " + event1.toString() + event2.toString());
-                            //loadPreviousMonth();
-                        } else {
-                            Log.d("Gestures", "swipe left: " + event1.toString() + event2.toString());
-                            //loadNextMonth();
-                        }
-                        return true;
-                    }
-                    Log.d("Gestures", "onFling: " + event1.toString() + event2.toString());
-                }
-            }
-            return false;
-        }
-    }*/
 }
