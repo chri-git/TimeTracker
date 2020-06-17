@@ -1,11 +1,13 @@
 package kri.app.timetracker.view;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,6 +53,10 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
         return balance;
     }
 
+    private void deleteRecord(TimeRecord record) {
+        mTaskRunner.executeAsyncVoid(() -> recordService().deleteRecord(record), this::notifyDataSetChanged);
+    }
+
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
@@ -76,6 +82,7 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
             viewHolder.dayOfWeek = view.findViewById(R.id.txt_day_of_week);
             viewHolder.endTime = view.findViewById(R.id.txt_end);
             viewHolder.startTime = view.findViewById(R.id.txt_start);
+            viewHolder.listItem = view.findViewById(R.id.list_item);
             // cache the viewHolder object inside the fresh view
             view.setTag(viewHolder);
         } else {
@@ -83,11 +90,27 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
             viewHolder = (ViewHolder) view.getTag();
         }
 
+        // long click listener to delete entries
+        viewHolder.listItem.setOnLongClickListener(v -> {
+            if (rec.getStart() != null || rec.getEnd() != null) {
+                // only show the popup if there's actually something to delete
+                AlertDialog.Builder builder =
+                        new AlertDialog.Builder(getContext()).setCancelable(true).setMessage(getContext().getString(R.string.pp_delete_text,
+                                rec.getDate()))
+                                .setPositiveButton(R.string.pp_delete_confirm,
+                                        (dialog, which) -> deleteRecord(rec))
+                                .setNegativeButton(R.string.pp_delete_cancel, 
+                                        (dialog, which) -> {});
+                builder.create().show();
+            }
+            return true;
+        });
+
         // show the day of the month
         viewHolder.dayOfMonth.setText(getContext().getString(R.string.txt_day_of_month_number,
                 rec.getDate().getDayOfMonth()));
         // show the weekday
-        viewHolder.dayOfWeek.setText(rec.getDate().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.getDefault()).substring(0, 3));
+        viewHolder.dayOfWeek.setText(rec.getDate().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.getDefault()).substring(0, 2));
         // show start
         // prepare a time picker, starting at either the previously set time or the current real time
         final LocalTime timePickerDefaultStart = rec.getStart() == null ? LocalTime.now() : rec.getStart();
@@ -105,6 +128,9 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
             mTimePicker.setTitle(R.string.txt_arrive);
             mTimePicker.show();
         });
+        viewHolder.startTime.setLongClickable(true);
+        viewHolder.startTime.setOnLongClickListener(v -> viewHolder.listItem.performLongClick());
+
         if (rec.getStart() != null) {
             viewHolder.startTime.setText(rec.getStart().format(mTimeFormatter));
             viewHolder.startTime.setTextColor(getContext().getColor(R.color.defaultTextColor));
@@ -131,6 +157,9 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
             mTimePicker.setTitle(R.string.txt_leave);
             mTimePicker.show();
         });
+        viewHolder.endTime.setLongClickable(true);
+        viewHolder.endTime.setOnLongClickListener(v -> viewHolder.listItem.performLongClick());
+
         if (rec.getEnd() != null) {
             viewHolder.endTime.setText(rec.getEnd().format(mTimeFormatter));
             viewHolder.endTime.setTextColor(getContext().getColor(R.color.defaultTextColor));
@@ -174,6 +203,7 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
     }
 
     private static class ViewHolder {
+        LinearLayout listItem;
         TextView dayOfMonth;
         TextView dayOfWeek;
         TextView startTime;

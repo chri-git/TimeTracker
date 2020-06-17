@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
                         TimeRecordService.getInstance(getApplicationContext()).getRecordsForMonth(mCurrentMonth)
                 , (result) -> {
                     mTimeRecordListAdapter = new TimeRecordListAdapter(this, result,
-                            this::updateMonthlyBalance);
+                            this::loadView);
                     showContent();
                 });
     }

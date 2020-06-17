@@ -74,7 +74,8 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/list_times">
+        android:id="@+id/list_times"
+        android:longClickable="true">
     </ListView>
 
 </LinearLayout>

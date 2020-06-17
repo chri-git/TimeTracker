@@ -1,6 +1,7 @@
 package kri.app.timetracker.db;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
@@ -24,6 +25,9 @@ public interface TimeRecordDao {
     
     @Update
     void updateRecord(TimeRecord record);
+    
+    @Delete
+    void deleteRecord(TimeRecord record);
     
     @Query("SELECT * from record where date >= :start and date <= :end order by date asc")
     List<TimeRecord> getAllForPeriod(LocalDate start, LocalDate end);

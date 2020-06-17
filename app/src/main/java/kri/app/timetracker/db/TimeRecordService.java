@@ -73,4 +73,9 @@ public class TimeRecordService {
         }
         return new ArrayList<>(dayMap.values());
     }
+    
+    public void deleteRecord(TimeRecord record) {
+        Log.d("DB", "Deleting record for " + record.getDate());
+        mDb.timeRecordDao().deleteRecord(record);
+    }
 }
