@@ -45,18 +45,6 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
 
     }
 
-    public int getMonthlyBalanceInMinutes() {
-        int balance = 0;
-        for (TimeRecord record : mRecords) {
-            balance = balance + getRecordBalance(record);
-        }
-        return balance;
-    }
-
-    private void deleteRecord(TimeRecord record) {
-        mTaskRunner.executeAsyncVoid(() -> recordService().deleteRecord(record), this::notifyDataSetChanged);
-    }
-
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
@@ -168,18 +156,25 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
             viewHolder.endTime.setTextColor(getContext().getColor(R.color.fadedTextColor));
         }
         // compute balance
-        int balanceMinutes = getRecordBalance(rec);
+        int balanceMinutes = getRecordBalanceInMinutes(rec);
         BalanceTextUtil.setBalance(viewHolder.balance, balanceMinutes, getContext());
 
         return view;
     }
 
-    private int getRecordBalance(TimeRecord record) {
+    /**
+     * Computes the time balance for a given day
+     * @param record the {@link TimeRecord} of the day
+     * @return the time balance in minutes, can be negative
+     */
+    private int getRecordBalanceInMinutes(TimeRecord record) {
         // fast path, if the record is incomplete, count as 0
         if (record.getStart() == null || record.getEnd() == null) {
             return 0;
         }
+        // the nominal time to work Monday through Thursday is 8:15h
         int nominalTime = 8 * 60 + 15;
+        // the nominal time to work on Friday is 5:30h
         if (record.getDate().getDayOfWeek().ordinal() == 4) {
             // Friday
             nominalTime = 5 * 60 + 30;
@@ -187,6 +182,7 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
         int workTime =
                 (record.getEnd().getHour() * 60 + record.getEnd().getMinute()) - (record.getStart().getHour() * 60 + record.getStart().getMinute());
 
+        // if we stay later than 12:30, we have to take a lunch break
         if (record.getEnd().isAfter(LocalTime.of(12, 30))) {
             // deduct 30 min lunch break
             workTime = workTime - 30;
@@ -194,6 +190,30 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
         return workTime - nominalTime;
     }
 
+    /**
+     * Computes the monthly balance, i.e. the sum of all daily balances
+     * @return the time balance in minutes, can be negative
+     */
+    public int getMonthlyBalanceInMinutes() {
+        int balance = 0;
+        for (TimeRecord record : mRecords) {
+            balance = balance + getRecordBalanceInMinutes(record);
+        }
+        return balance;
+    }
+
+    /**
+     * Asynchronously deletes a time record from the database and then refreshes the list
+     * @param record the record  to be deleted
+     */
+    private void deleteRecord(TimeRecord record) {
+        mTaskRunner.executeAsyncVoid(() -> recordService().deleteRecord(record), this::notifyDataSetChanged);
+    }
+
+    /**
+     * Asynchronously saves an updated record to the database and then refreshes the list
+     * @param record the updated record
+     */
     private void updateRecord(TimeRecord record) {
         mTaskRunner.executeAsyncVoid(() -> recordService().save(record), this::notifyDataSetChanged);
     }
@@ -202,6 +222,9 @@ public class TimeRecordListAdapter extends ArrayAdapter<TimeRecord> {
         return TimeRecordService.getInstance(getContext());
     }
 
+    /**
+     * A static class instance that caches child views for our adapter. 
+     */
     private static class ViewHolder {
         LinearLayout listItem;
         TextView dayOfMonth;

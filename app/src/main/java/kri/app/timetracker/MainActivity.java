@@ -62,6 +62,8 @@ public class MainActivity extends Activity {
         monthName.setText(getString(R.string.txt_current_month,
                 mCurrentMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()), mCurrentMonth.getYear()));
         LocalDate now = LocalDate.now();
+        // by clicking the month name, we can choose a specific month to skip to, 
+        // rather than only going one month back or forward
         monthName.setOnClickListener((v) -> {
             DatePickerDialog datePicker = new DatePickerDialog(this, (picker, year, month, day) -> {
                 Log.d("DatePicker", "Selected " + year + "-" + month + "-" + day);
@@ -71,6 +73,7 @@ public class MainActivity extends Activity {
             datePicker.setTitle(R.string.txt_month_picker);
             datePicker.show();
         });
+        // display the balance for the selected month
         int balanceMinutes = mTimeRecordListAdapter.getMonthlyBalanceInMinutes();
         final TextView currentMonthBalance = findViewById(R.id.txt_current_balance);
         BalanceTextUtil.setBalance(currentMonthBalance, balanceMinutes, this);
